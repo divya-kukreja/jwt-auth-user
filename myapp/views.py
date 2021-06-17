@@ -25,16 +25,23 @@ def login(request):
         print("Call has reached")
         email = request.POST['email']
         password = request.POST['password']
-        context = {
-            'id' : 1,
-            'email' : email,
-            'password' : password
+
+        # from db validate this user ==
+        context ={
+            'myuser' : myuser
         }
 
-        encoded_data =  {  'token' :  jwt.encode(context , "this is very complexksncjabjkvbfsk" , algorithm="HS256")  } 
+        encoded_data =  {  
+            'token' :  jwt.encode(context , "this is very complexksncjabjkvbfsk" , algorithm="HS256"),
+            'userdata' : context  
+        }
+
         return JsonResponse(encoded_data)
     else:
         return JsonResponse({ 'error' : "something went wrong" })
+
+
+
 
 @csrf_exempt    
 def handleSignup(request):
@@ -60,30 +67,53 @@ def handleSignup(request):
         #      return redirect('home')
         
         # Create the user
+        # usermodel = {
+        #     
+        #     username,
+        #     password,
+        #     email,
+        #     ..
+        # }
+
+        # create user in db
+        # fetch that user
         myuser = User.objects.create_user(username, email, pass1)
         myuser.first_name= fname
         myuser.last_name= lname
         myuser.save()
         messages.success(request, " Your iCoder has been successfully created")
         print('Registered sucessfully!')
+        # make object of the user data ==
         context ={
             'myuser' : myuser
         }
-        # return redirect('home')
+
+        encoded_data =  {  
+            'token' :  jwt.encode(context , "this is very complexksncjabjkvbfsk" , algorithm="HS256"),
+            'userdata' : context  
+        }
         return JsonResponse(context)
+        # return redirect('home')
     else:
         return HttpResponse("404 - Not found")
 
+
+
+
+
+
 @csrf_exempt
 def verifytoken(request):
-    if request.method == "GET":
-        decodedata = jwt.decode(request.META['HTTP_AUTHORIZATION'].split()[1] , "this is very complexksncjabjkvbfsk" , algorithms="HS256")
-        if decodedata['id'] == 1:
-            return JsonResponse({ 'message' : "successfully decoded, User is Authenticated.." , 'payload' : decodedata  })
-        else:
-            return JsonResponse({ 'error' : "Authentication is failed" })
-    else:
-        return JsonResponse({ 'error' : "something went wrong" })
+    decodedata = jwt.decode(request.META['HTTP_AUTHORIZATION'].split()[1] , "this is very complexksncjabjkvbfsk" , algorithms="HS256")
+    id  =  decodedata['myuser']['id']
+    # if request.method == "GET":
+    #     decodedata = jwt.decode(request.META['HTTP_AUTHORIZATION'].split()[1] , "this is very complexksncjabjkvbfsk" , algorithms="HS256")
+    #     if decodedata['id'] == 1:
+    #         return JsonResponse({ 'message' : "successfully decoded, User is Authenticated.." , 'payload' : decodedata  })
+    #     else:
+    #         return JsonResponse({ 'error' : "Authentication is failed" })
+    # else:
+    #     return JsonResponse({ 'error' : "something went wrong" })
 
 
 
